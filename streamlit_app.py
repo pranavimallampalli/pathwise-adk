@@ -405,17 +405,34 @@ async def run_workflow_call(user_query: str) -> str:
             new_message=new_message
         ):
             if isinstance(event, RequestInput):
+                msg = event.message
+                if event.interrupt_id == "subjects":
+                    msg = "Welcome to PathWise! 👋\nLet's build your personalized study roadmap.\nWhat subjects/courses are you studying?"
                 st.session_state.pending_interrupt = {
                     "interrupt_id": event.interrupt_id,
-                    "message": event.message
+                    "message": msg
                 }
-                response_text = event.message
+                response_text = msg
             elif hasattr(event, 'content') and event.content and event.content.parts:
                 for part in event.content.parts:
-                    if part.text:
+                    if hasattr(part, 'function_call') and part.function_call:
+                        fc = part.function_call
+                        if fc.name in ["adk_request_input", "request_input"]:
+                            interrupt_id = fc.args.get("interruptId") or fc.id
+                            msg = fc.args.get("message", "")
+                            if interrupt_id == "subjects":
+                                msg = "Welcome to PathWise! 👋\nLet's build your personalized study roadmap.\nWhat subjects/courses are you studying?"
+                            st.session_state.pending_interrupt = {
+                                "interrupt_id": interrupt_id,
+                                "message": msg
+                            }
+                            response_text = msg
+                            break
+                    elif part.text:
                         response_text += part.text
             elif hasattr(event, 'output') and event.output:
-                if isinstance(event.output, str):
+                # Do not let intermediate text outputs from safety checks overwrite the final question
+                if isinstance(event.output, str) and not response_text:
                     response_text += event.output
     except Exception as e:
         logging.error(f"ADK runner exception: {e}", exc_info=True)
@@ -704,16 +721,7 @@ def render_chat_widget():
         query = st.session_state.last_query
         st.session_state.last_query = None
         
-        # Intercept onboarding first message if not completed
-        if not profile_completed:
-            if not st.session_state.pending_interrupt:
-                welcome_msg = "Welcome to PathWise! 👋\nLet's build your personalized study roadmap.\nWhat subjects/courses are you studying?"
-                st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
-                st.session_state.pending_interrupt = {
-                    "interrupt_id": "subjects",
-                    "message": welcome_msg
-                }
-                st.rerun()
+
                 
         # Check local request routing first to bypass LLM
         local_reply = classify_and_route_locally(query)

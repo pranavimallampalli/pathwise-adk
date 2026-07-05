@@ -1,132 +1,205 @@
-# PathWise — AI Study Decision Companion
+# PathWise
 
-PathWise is an AI study decision companion designed to help students overcome decision fatigue by answering one simple question: **"What should I study next?"** 
+<p align="center">
+  <img src="assets/cover_page_banner.png" alt="PathWise Banner" width="100%">
+</p>
 
-Unlike generic calendar apps, PathWise builds and dynamically adapts a learning roadmap based on the student's syllabus, exam dates, daily availability, and topic difficulty feedback.
+<h3 align="center">
+AI-powered Study Decision Companion built with Google ADK
+</h3>
 
-## Prerequisites
+<p align="center">
+Helping students overcome study decision fatigue by answering one simple question:
+<b>"What should I study next?"</b>
+</p>
 
-- **Python 3.11+**
-- **uv** (Python package manager)
-- **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/apikey)
+---
 
-## Quick Start
+## Problem
 
-```bash
-# Clone the repository
-git clone <repo-url>
-cd pathwise
+Students often lose valuable study time deciding where to start instead of actually studying. Managing multiple subjects, different exam dates, missed sessions, and changing schedules creates decision fatigue and inconsistent study habits.
 
-# Copy environment template and add your GOOGLE_API_KEY
-cp .env.example .env
+PathWise solves this by acting as an intelligent study companion. Instead of creating a static timetable, it builds a personalized study roadmap, continuously adapts it, and recommends the best topic to study next based on the student's progress.
 
-# Install dependencies
-make install
+---
 
-# Launch the Streamlit Frontend UI
-make frontend
+## Features
 
-# Or launch the ADK Playground UI
-make playground
-```
-*Note: On Windows, launch the Streamlit frontend using:*
-```powershell
-uv run streamlit run streamlit_app.py --server.port 18082
-```
+- Personalized AI-generated study roadmap
+- Conversational onboarding
+- Adaptive study planning
+- "Today's Focus" recommendations
+- Progress tracking
+- Curated learning resources
+- Secure input validation
+- MCP-powered persistent storage
+- Modern Streamlit dashboard
 
-## System Architecture
+---
+
+## Demo
+
+### Cover Banner
+
+<p align="center">
+<img src="assets/cover_page_banner.png" width="100%">
+</p>
+
+### System Architecture
+
+<p align="center">
+<img src="assets/architecture_diagram.png" width="100%">
+</p>
+
+---
+
+## Architecture
 
 ```mermaid
 graph TD
     START((START)) --> SecNode[Security Checkpoint]
     SecNode -->|SECURITY_EVENT| SecEvNode[Security Event Node]
     SecNode -->|__DEFAULT__| CoordNode[Workflow Coordinator]
-    
+
     CoordNode -->|Incomplete Profile| HITL{RequestInput Questions}
     HITL -->|Subjects / Exam Dates / Availability| CoordNode
-    
+
     CoordNode -->|Onboarding Completed| OrchAgent[Orchestrator Agent]
-    
+
     OrchAgent -->|AgentTool| SyllabusParser[Syllabus Parser Agent]
     OrchAgent -->|AgentTool| StudyPlanner[Study Planner Agent]
     OrchAgent -->|AgentTool| AdaptivePlanner[Adaptive Planner Agent]
     OrchAgent -->|AgentTool| LearningGuide[Learning Guide Agent]
-    
+
     OrchAgent -->|MCP Local Storage| DataFile[(pathwise_data.json)]
     AdaptivePlanner -->|MCP Local Storage| DataFile
-    
+
     OrchAgent --> FinalNode[Final Output Node]
     SecEvNode --> FinalNode
     FinalNode --> END((END))
 ```
 
-## How to Run
+---
 
-- **`make playground`**: Launch the local development server and interactive web UI at `http://localhost:18081`.
-- **`make run`**: Run the agent as a local FastAPI web server.
+## How It Works
 
-## Sample Test Cases
+1. The student starts a conversation with PathWise.
+2. The onboarding workflow collects subjects, exam dates, study availability, preferred session length, and strengths or weaknesses.
+3. The Study Planner creates a personalized roadmap.
+4. The Learning Guide recommends the next topic to study with explanations and learning resources.
+5. If the student misses a study session or struggles with a topic, the Adaptive Planner automatically reorganizes the roadmap.
+6. Student progress is stored using an MCP server for future sessions.
 
-### Test Case 1: Conversational Onboarding
-- **Input**: Sending `hello` to a fresh session.
-- **Expected Flow**: The security node passes the input. The coordinator detects that no profile exists and triggers `RequestInput` for your list of subjects.
-- **Check**: You should see a prompt in the Playground UI: *"Welcome to PathWise! Let's get started. What subjects/courses are you studying?"*
+---
 
-### Test Case 2: Today's Focus Query
-- **Input**: `"What should I study next?"` (after completing onboarding).
-- **Expected Flow**: The orchestrator fetches the roadmap from the local storage using the MCP server, queries the Learning Guide, and presents the next pending topic.
-- **Check**: The Playground UI displays **Today's Focus** with the recommended topic, estimated study time, pedagogical reason for selection, and resources.
+## Tech Stack
 
-### Test Case 3: Adaptive Schedule Adjustment
-- **Input**: `"I missed my study block today."` or `"This topic is too hard."`
-- **Expected Flow**: The orchestrator delegates to the Adaptive Planner. The planner reads the roadmap, flags the current task as missed (or adds a split sub-task for hard topics), and reorganizes the upcoming tasks.
-- **Check**: The response explains how the roadmap was adjusted, and [pathwise_data.json](file:///c:/Users/Pranavi/OneDrive/Documents/adk-workspace/pathwise/pathwise_data.json) displays the modified study queue.
+- Google Agent Development Kit (ADK)
+- Gemini 2.5 Flash
+- Python
+- Streamlit
+- MCP (Model Context Protocol)
+- uv Package Manager
 
-## Troubleshooting
+---
 
-1. **Error: `ModuleNotFoundError: No module named 'mcp'`**
-   - *Fix*: Run `uv sync` to ensure all dependencies from `pyproject.toml` are correctly installed.
-2. **Error: `404 model not found` on first query**
-   - *Fix*: Ensure `.env` is pointing to a live model (like `gemini-2.5-flash`). Do not use retired `gemini-1.5` models.
-3. **Windows Hot-Reload Failure (server state does not update after code edit)**
-   - *Fix*: Fully terminate the server using PowerShell:
-     ```powershell
-     Get-Process -Id (Get-NetTCPConnection -LocalPort 18081, 8090 -ErrorAction SilentlyContinue).OwningProcess | Stop-Process -Force
-     ```
-     Then relaunch the playground command.
+## Project Structure
 
-## Push to GitHub
+```
+pathwise/
+│
+├── app/
+│   ├── agent.py
+│   ├── mcp_server.py
+│   └── ...
+│
+├── assets/
+│   ├── cover_page_banner.png
+│   └── architecture_diagram.png
+│
+├── tests/
+│
+├── streamlit_app.py
+├── pyproject.toml
+├── Makefile
+└── README.md
+```
 
-1. Create a new repo at https://github.com/new
-   - Name: `pathwise`
-   - Visibility: Public or Private
-   - Do NOT initialize with README (you already have one)
+---
 
-2. In your terminal, navigate into your project folder:
-   ```bash
-   cd pathwise
-   git init
-   git add .
-   git commit -m "Initial commit: pathwise ADK agent"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/pathwise.git
-   git push -u origin main
-   ```
+## Running Locally
 
-3. Verify `.gitignore` includes:
-   ```
-   .env          ← your API key — must NEVER be pushed
-   .venv/
-   __pycache__/
-   *.pyc
-   .adk/
-   ```
+### Clone the repository
 
-⚠️ **NEVER** push `.env` to GitHub. Your API key will be exposed publicly.
+```bash
+git clone https://github.com/<your-username>/pathwise.git
+cd pathwise
+```
 
-## Assets
+### Create environment
 
-- [Architecture Diagram](file:///c:/Users/Pranavi/OneDrive/Documents/adk-workspace/pathwise/assets/architecture_diagram.png)
-  ![Architecture Diagram](file:///c:/Users/Pranavi/OneDrive/Documents/adk-workspace/pathwise/assets/architecture_diagram.png)
-- [Cover Banner](file:///c:/Users/Pranavi/OneDrive/Documents/adk-workspace/pathwise/assets/cover_page_banner.png)
-  ![Cover Banner](file:///c:/Users/Pranavi/OneDrive/Documents/adk-workspace/pathwise/assets/cover_page_banner.png)
+```bash
+cp .env.example .env
+```
+
+Add your Google Gemini API Key inside `.env`.
+
+### Install dependencies
+
+```bash
+uv sync
+```
+
+### Launch the Streamlit application
+
+```bash
+make frontend
+```
+
+Or on Windows
+
+```powershell
+uv run streamlit run streamlit_app.py --server.port 18082
+```
+
+---
+
+## Example Conversation
+
+**Student**
+
+> I missed today's study session.
+
+**PathWise**
+
+> No worries. I've rescheduled today's study block, redistributed the remaining topics across your available study days, and updated your roadmap while keeping your exam deadlines in mind.
+
+---
+
+## Security
+
+PathWise includes multiple safety mechanisms.
+
+- Personal information (emails and phone numbers) is automatically scrubbed.
+- Prompt injection attempts are detected and blocked.
+- Structured security audit logs are generated.
+- Academic misuse requests such as cheating or plagiarism are rejected.
+
+---
+
+## Future Improvements
+
+- Google Calendar integration
+- Mobile application
+- Study reminders and notifications
+- LMS integration
+- Cloud database support
+- Multi-device synchronization
+
+---
+
+## Author
+
+**Pranavi**
+
+Built with Google Agent Development Kit (ADK) for the Agents for Good Hackathon.

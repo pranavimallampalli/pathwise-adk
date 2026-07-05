@@ -1,0 +1,81 @@
+# PathWise Development Tasklist
+
+- [x] PHASE 1: Scaffold, Auth & Environment
+  - [x] Scaffold project `pathwise`
+  - [x] Copy `.env` to project folder
+  - [x] Create `config.py` with universal configuration
+  - [x] Verify or create `.gitignore`
+- [x] PHASE 2: Multi-Agent Architecture
+  - [x] Define shared state in `agent.py`
+  - [x] Create Orchestrator, Syllabus Parser, Study Planner, Adaptive Planner, and Learning Guide agents
+  - [x] Wire workflow graph with proper routes and edges (respecting duplicate edge rules)
+- [x] PHASE 3: MCP Server & Local Storage
+  - [x] Build `mcp_server.py` exposing profile, roadmap, progress, and resource tools
+  - [x] Wire MCPToolset to the specialized agents
+- [x] PHASE 4: Security
+  - [x] Implement `security_checkpoint()` node in `agent.py` for PII and injection detection
+  - [x] Enable structured JSON logging
+- [x] PHASE 5: Local Dev & Testing
+  - [x] Pin dependency versions in `pyproject.toml`
+  - [x] Standardize targets in `Makefile`
+  - [x] Run `uv sync` and launch the playground server
+  - [x] Perform verification gate checks and dry-run queries
+- [x] PHASE 6: Documentation & Pitch Script
+  - [x] Generate project `README.md`
+  - [x] Generate `SUBMISSION_WRITEUP.md`
+  - [x] Generate `DEMO_SCRIPT.txt`
+- [x] PHASE 7: Submission Assets
+  - [x] Generate workflow diagram image
+  - [x] Generate cover banner image
+  - [x] Embed images in README.md
+- [x] PHASE 8: Demo & Verification
+  - [x] Compile final walkthrough
+- [x] Streamlit Frontend Integration
+  - [x] Install Streamlit and update project dependencies
+  - [x] Implement modern dark-themed frontend in `streamlit_app.py`
+  - [x] Wire Streamlit to run ADK Workflow programmatically via InMemoryRunner
+  - [x] Hide developer traces and format JSON roadmaps into subject-grouped expandable rows
+- [x] Hackathon Presentation UI Polish
+  - [x] Implement premium purple/pink gradient styling and glassmorphism cards
+  - [x] Redesign chat bubbles with right-aligned user and left-aligned assistant views
+  - [x] Implement robust API quota error fallback handling
+  - [x] Add study mode selector, exam countdown, and quote widgets
+  - [x] Add hidden Developer Mode toggle for judges
+- [x] Full Interaction & Navigation Integration
+  - [x] Implement page routing via session state (Chat, Roadmap, Progress, Resources, Settings)
+  - [x] Wire task updates on Roadmap page to update local JSON file
+  - [x] Add dynamic progress metrics and area charts
+  - [x] Add theme selector (Cyberpunk, Mint Forest, Deep Ocean) and developer diagnostics
+- [x] High-Density Dashboard Restructuring
+  - [x] Implement 3-column workspace with a 70% left side and 30% right sidebar
+  - [x] Create compact welcome banner and single-row metrics layout
+  - [x] Set Study Roadmap visible by default showing first 5 tasks and show-more toggle
+  - [x] Build floating chat container of fixed height
+- [x] Stability & Bug Fixing
+  - [x] Add dictionary instance verification to `profile` and `roadmap` loading
+  - [x] Implement type checking inside `get_countdown()` to secure onboarding stages
+  - [x] Convert custom HTML chat bubbles to native Streamlit st.chat_message components
+- [x] Branding & Logo Restoration
+  - [x] Recreate the custom gradient rounded square P logo with subtle glow
+  - [x] Place recreated logo next to the PathWise title in both sidebar and main header
+- [x] Hackathon Presentation Polish
+  - [x] Apply purple/pink gradient sidebar active button overrides in CSS
+  - [x] Implement dynamic greeting: Good Morning, Pranavi! 🌸
+  - [x] Adjust metrics grid template to increase Today's Focus card width
+  - [x] Embed dynamic difficulty & metadata badges inside Roadmap expanders
+  - [x] Catch Gemini API quota errors and show friendly assistant robot card
+  - [x] Redesign layout into responsive 60/40 split, scaling the Chat panel width
+  - [x] Add clean response parsing to filter long markdown plan dumps out of chat
+- [x] Request Optimization & Routing
+  - [x] Implement local request classifier and routing (bypassing LLM for profile/progress/roadmap queries)
+  - [x] Encase chat prompt in a Submit Form (clear_on_submit=True) to fix duplicate reruns
+
+
+
+
+
+
+
+
+
+

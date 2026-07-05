@@ -69,6 +69,10 @@
 - [x] Request Optimization & Routing
   - [x] Implement local request classifier and routing (bypassing LLM for profile/progress/roadmap queries)
   - [x] Encase chat prompt in a Submit Form (clear_on_submit=True) to fix duplicate reruns
+  - [x] Add "🔄 New Study Session" button to sidebar to clear chat history and request a fresh ADK runner session ID
+  - [x] Intercept first user message when onboarding is not completed to kick off subjects setup cleanly
+
+
 
 
 

@@ -704,6 +704,17 @@ def render_chat_widget():
         query = st.session_state.last_query
         st.session_state.last_query = None
         
+        # Intercept onboarding first message if not completed
+        if not profile_completed:
+            if not st.session_state.pending_interrupt:
+                welcome_msg = "Welcome to PathWise! 👋\nLet's build your personalized study roadmap.\nWhat subjects/courses are you studying?"
+                st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
+                st.session_state.pending_interrupt = {
+                    "interrupt_id": "subjects",
+                    "message": welcome_msg
+                }
+                st.rerun()
+                
         # Check local request routing first to bypass LLM
         local_reply = classify_and_route_locally(query)
         if local_reply:
@@ -1108,6 +1119,33 @@ with st.sidebar:
         st.session_state.active_page = "Settings"
         st.rerun()
         
+    if st.button("🔄 New Study Session", key="nav_new_session", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.last_query = None
+        st.session_state.pending_interrupt = None
+        
+        # Reset local data file values so onboarding begins fresh
+        db_data = load_local_data()
+        if db_data and isinstance(db_data, dict):
+            if "profile" in db_data:
+                db_data["profile"]["onboarding_completed"] = False
+                db_data["profile"]["subjects"] = []
+                db_data["profile"]["exam_dates"] = {}
+                db_data["profile"]["study_availability"] = ""
+                db_data["profile"]["session_length"] = ""
+                db_data["profile"]["strengths_weaknesses"] = ""
+            if "roadmap" in db_data:
+                db_data["roadmap"]["tasks"] = []
+            save_local_data(db_data)
+            
+        async def reset_session():
+            session = await st.session_state.runner.session_service.create_session(
+                app_name="app", user_id="student_user"
+            )
+            return session.id
+        st.session_state.session_id = asyncio.run(reset_session())
+        st.rerun()
+        
     st.markdown("---")
     st.markdown("### 🎓 Student Profile")
     
@@ -1188,12 +1226,13 @@ elif st.session_state.active_page == "Settings":
 
 # INITIAL CHAT BOOTSTRAP
 if not st.session_state.messages:
-    with st.spinner("Initializing PathWise..."):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        welcome = loop.run_until_complete(run_workflow_call("hello"))
-        st.session_state.messages.append({"role": "assistant", "content": welcome})
-        st.rerun()
+    if profile_completed:
+        with st.spinner("Initializing PathWise..."):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            welcome = loop.run_until_complete(run_workflow_call("hello"))
+            st.session_state.messages.append({"role": "assistant", "content": welcome})
+            st.rerun()
 
 # --- OPTIONAL DEVELOPER MODE ---
 if st.session_state.dev_mode:

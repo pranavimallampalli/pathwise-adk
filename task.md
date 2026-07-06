@@ -71,17 +71,13 @@
   - [x] Encase chat prompt in a Submit Form (clear_on_submit=True) to fix duplicate reruns
   - [x] Add "🔄 New Study Session" button to sidebar to clear chat history and request a fresh ADK runner session ID
   - [x] Intercept first user message when onboarding is not completed to kick off subjects setup cleanly, synchronizing state with the ADK runner and parsing function_call payloads correctly
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- [x] Resource Recommendation Integration
+  - [x] Register mcp_toolset to learning_guide_agent so it can access retrieve_resources
+  - [x] Expand mcp_server.py database to cover Computer Networks and DBMS subjects/topics
+- [x] PHASE 9: Quality & Architectural Improvements
+  - [x] Implement `parse_and_normalize_subjects` in `agent.py` and `mcp_server.py`
+  - [x] Add structured resource database mapping textbooks, playlists, docs, practice websites, and revision notes to `computer networks`, `dbms`, `biology`, `chemistry`, and `physics`
+  - [x] Configure `study_planner` and `adaptive_planner` instructions to support `"day"` fields and strict subject filtering
+  - [x] Rebuild Streamlit Left Sidebar to show two distinct plan options (Continue Previous Plan / Start New Study Plan) with clean file overwrite
+  - [x] Group and render study roadmap tasks by Day 1 / Day 2 in dashboard widgets and full Roadmap page
+  - [x] Verify workflow transitions from CN/DBMS to Bio/Chem/Phys without leftover states and wire dynamic retrieve_resources tool queries, removing all static placeholders and Monday/Tuesday mock charts

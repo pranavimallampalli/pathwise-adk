@@ -37,6 +37,34 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 if "GOOGLE_CLOUD_PROJECT" in os.environ:
     del os.environ["GOOGLE_CLOUD_PROJECT"]
 
+import re
+
+def parse_and_normalize_subjects(subject_input: str) -> list[str]:
+    # Split by commas, semicolons, and 'and' or '&'
+    raw_parts = re.split(r'[;,]|\band\b|&', subject_input, flags=re.IGNORECASE)
+    
+    resolved = []
+    for part in raw_parts:
+        part = part.strip().lower()
+        if not part:
+            continue
+        # If the part contains spaces, check if it's a known multi-word subject
+        known_multi = ["computer networks", "data structures", "operating systems", "organic chemistry", "discrete math", "discrete mathematics"]
+        if part in known_multi:
+            resolved.append(part)
+        else:
+            # Split by space and reconstruct if we see multi-word matches
+            words = [w.strip() for w in part.split() if w.strip()]
+            i = 0
+            while i < len(words):
+                if i + 1 < len(words) and f"{words[i]} {words[i+1]}" in known_multi:
+                    resolved.append(f"{words[i]} {words[i+1]}")
+                    i += 2
+                else:
+                    resolved.append(words[i])
+                    i += 1
+    return resolved
+
 # Local data storage path (project root/pathwise_data.json)
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pathwise_data.json")
 
@@ -118,12 +146,18 @@ study_planner_agent = LlmAgent(
         "You are the Study Planner for PathWise. "
         "Your task is to generate a personalized study roadmap (JSON format) based on the student's subjects, "
         "exam dates, study availability, strengths, and weaknesses. "
-        "Ensure the roadmap is realistic and focuses on high-priority topics first. "
+        "Calendar-Based Roadmap Rules:\n"
+        "1. You must assign each task a 'day' field indicating the sequence (e.g., 'Day 1', 'Day 2', 'Day 3', etc.). "
+        "Group multiple tasks under the same day if they fit within the student's daily availability. "
+        "If exam dates or scheduling dates are provided, optionally assign a specific 'date' field (YYYY-MM-DD).\n"
+        "2. Strictly include ONLY the subjects specified in the student's profile subjects list. Do NOT include, mix, or carry over any subjects or topics from other subjects (like Computer Networks or DBMS if they are studying Biology).\n"
+        "Ensure the roadmap is realistic and focuses on high-priority topics first.\n"
         "Return ONLY a raw JSON object with the following structure:\n"
         "{\n"
         "  \"tasks\": [\n"
         "    {\n"
         "      \"id\": \"task1\",\n"
+        "      \"day\": \"Day 1\",\n"
         "      \"subject\": \"Subject Name\",\n"
         "      \"topic\": \"Topic Name\",\n"
         "      \"estimated_time\": \"Estimated duration (e.g. 45 mins)\",\n"
@@ -141,12 +175,18 @@ adaptive_planner_agent = LlmAgent(
     instruction=(
         "You are the Adaptive Planner for PathWise. "
         "Your task is to modify the study roadmap when the student misses tasks, finishes early, or provides difficulty feedback. "
-        "Adjust topic sequence, split hard topics into smaller ones, or add catch-up slots. "
+        "Intelligent Adaptation Rules:\n"
+        "1. If a task is marked 'completed' and 'easy', consider shortening subsequent related tasks, or skipping basic topics in that subject.\n"
+        "2. If a task is marked 'completed' and 'hard' (difficult), split the next related task in that subject into smaller, more granular sub-tasks, or add a dedicated 'Review' task for this topic.\n"
+        "3. If a task is marked 'missed' (skipped), insert a 'Catch-up Slot' or reschedule it to a later day, but do not just append it to the end; re-budget the daily study availability to fit it.\n"
+        "4. Always retain the calendar day structure ('Day 1', 'Day 2', etc.) and ensure the updated tasks list replaces the old one cleanly.\n"
+        "5. Strictly include ONLY the current subjects specified in the student profile. Do NOT mix or carry over any previous subjects.\n"
         "Return ONLY the updated raw JSON object matching the roadmap structure:\n"
         "{\n"
         "  \"tasks\": [\n"
         "    {\n"
         "      \"id\": \"task1\",\n"
+        "      \"day\": \"Day 1\",\n"
         "      \"subject\": \"Subject Name\",\n"
         "      \"topic\": \"Topic Name\",\n"
         "      \"estimated_time\": \"Estimated duration\",\n"
@@ -165,9 +205,10 @@ learning_guide_agent = LlmAgent(
     model=config.model,
     instruction=(
         "You are the Learning Guide for PathWise. "
-        "Based on the recommended topic, explain why it was chosen (pedagogical reason) and list 2-3 specific learning resources (articles, videos, practice problems). "
-        "Keep the resources tailored and direct."
-    )
+        "Based on the recommended topic, explain why it was chosen (pedagogical reason) and retrieve relevant learning resources using the retrieve_resources tool. "
+        "Always use the retrieve_resources tool to fetch curated learning resources for the subject and topic, and display those retrieved resources to the user."
+    ),
+    tools=[mcp_toolset]
 )
 
 orchestrator_agent = LlmAgent(
@@ -271,7 +312,7 @@ async def workflow_coordinator(ctx: Context, node_input: str) -> AsyncGenerator[
     if not profile.get("onboarding_completed", False):
         if not profile.get("subjects"):
             if ctx.resume_inputs and "subjects" in ctx.resume_inputs:
-                subs = [s.strip() for s in ctx.resume_inputs["subjects"].split(",") if s.strip()]
+                subs = parse_and_normalize_subjects(ctx.resume_inputs["subjects"])
                 profile["subjects"] = subs
                 save_data(data)
             else:
@@ -350,7 +391,12 @@ async def workflow_coordinator(ctx: Context, node_input: str) -> AsyncGenerator[
                 return
 
     # Main Orchestration flow when onboarding is completed
-    orchestrator_res = await ctx.run_node(orchestrator_agent, node_input=node_input)
+    prompt = (
+        f"Current Student Profile:\n{json.dumps(profile, indent=2)}\n\n"
+        f"Current Study Roadmap:\n{json.dumps(data.get('roadmap', {}), indent=2)}\n\n"
+        f"User Message: {node_input}"
+    )
+    orchestrator_res = await ctx.run_node(orchestrator_agent, node_input=prompt)
     text_res = orchestrator_res.text if hasattr(orchestrator_res, 'text') else str(orchestrator_res)
     yield Event(output=text_res)
 
@@ -377,6 +423,8 @@ workflow = Workflow(
         (workflow_coordinator, final_output)
     ]
 )
+
+root_agent = workflow
 
 app = App(
     root_agent=workflow,

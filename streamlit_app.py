@@ -539,22 +539,6 @@ def update_task_status_local(task_id: str, new_status: str):
                 return True
     return False
 
-# Category-specific resources
-DEFAULT_RESOURCES = {
-    "Biology": [
-        {"title": "Introduction to OSI Model", "source": "CrashCourse Video", "duration": "8 mins", "link": "https://www.youtube.com/watch?v=LANw15a7la4", "type": "Videos"},
-        {"title": "OSI 7-Layer Model Reference Guide", "source": "GeeksforGeeks", "duration": "15 mins", "link": "https://www.geeksforgeeks.org/layers-of-osi-model/", "type": "Articles"},
-        {"title": "Campbell Biology Textbook", "source": "Pearson", "duration": "Deep Study", "link": "https://www.pearson.com/", "type": "Books"}
-    ],
-    "Computer Networks": [
-        {"title": "OSI Model Explanation", "source": "PowerCert Animated", "duration": "8 mins", "link": "https://www.youtube.com/watch?v=LANw15a7la4", "type": "Videos"},
-        {"title": "Networking Basics Course", "source": "Khan Academy", "duration": "2 hours", "link": "https://www.khanacademy.org/", "type": "Articles"}
-    ],
-    "Chemistry": [
-        {"title": "General Chemistry Fundamentals", "source": "Khan Academy", "duration": "30 mins", "link": "https://www.khanacademy.org/", "type": "Videos"}
-    ]
-}
-
 # --- PAGE RENDERING COMPONENTS ---
 
 def render_welcome_card():
@@ -633,52 +617,68 @@ def render_roadmap_widget():
     if not st.session_state.show_all_tasks:
         visible_tasks = tasks[:5]
         
+    # Group tasks by day/date
+    grouped_tasks = defaultdict(list)
     for t in visible_tasks:
-        status = t.get("status", "pending")
-        badge_class = f"badge-{status}"
-        topic_desc = t.get("topic", "N/A")
-        duration = t.get("estimated_time", "N/A")
-        task_id = t.get("id", "N/A")
-        subject = t.get("subject", "General")
+        day_val = t.get("day") or "Day 1"
+        grouped_tasks[day_val].append(t)
         
-        # Determine difficulty dynamically
-        difficulty = "Medium"
-        if any(w in topic_desc.lower() for w in ["intro", "fundamental", "basic", "overview"]):
-            difficulty = "Easy"
-        elif any(w in topic_desc.lower() for w in ["advanced", "security", "cryptography", "expert", "deep dive"]):
-            difficulty = "Hard"
+    # Sort days numerically
+    sorted_days = sorted(grouped_tasks.keys(), key=lambda x: int(re.search(r'\d+', x).group()) if re.search(r'\d+', x) else 999)
+    
+    for day in sorted_days:
+        st.markdown(f"<div style='font-size: 13px; font-weight: 700; margin-top: 14px; margin-bottom: 6px; color: #a855f7; border-bottom: 1px solid rgba(168, 85, 247, 0.2); padding-bottom: 2px;'>📅 {day.upper()}</div>", unsafe_allow_html=True)
+        for t in grouped_tasks[day]:
+            status = t.get("status", "pending")
+            badge_class = f"badge-{status}"
+            topic_desc = t.get("topic", "N/A")
+            duration = t.get("estimated_time", "N/A")
+            task_id = t.get("id", "N/A")
+            subject = t.get("subject", "General")
+            
+            # Determine difficulty dynamically
+            difficulty = "Medium"
+            if any(w in topic_desc.lower() for w in ["intro", "fundamental", "basic", "overview"]):
+                difficulty = "Easy"
+            elif any(w in topic_desc.lower() for w in ["advanced", "security", "cryptography", "expert", "deep dive"]):
+                difficulty = "Hard"
 
-        # Expander acts as the expand arrow, containing additional actions
-        with st.expander(f"📖 {topic_desc}   •   ⏱️ {duration}"):
-            st.markdown(
-                f"""
-                <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
-                    <span class="badge badge-{status}">{status.upper()}</span>
-                    <span class="badge" style="background-color: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25);">{subject}</span>
-                    <span class="badge badge-{difficulty.lower()}">{difficulty.upper()} DIFFICULTY</span>
-                    <span class="badge" style="background-color: rgba(255, 255, 255, 0.05); color: #8b949e; border: 1px solid rgba(255, 255, 255, 0.1);">⏱️ {duration}</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            col_info, col_actions = st.columns([3, 2])
-            with col_info:
-                st.markdown(f"**Task ID**: `{task_id}`")
-                st.markdown(f"**Topic Details**: {topic_desc}")
-            with col_actions:
-                st.markdown("**Update Status**")
-                if status != "completed":
-                    if st.button("Mark Completed", key=f"comp_{task_id}", use_container_width=True):
-                        if update_task_status_local(task_id, "completed"):
-                            st.rerun()
-                if status != "missed":
-                    if st.button("Mark Missed", key=f"miss_{task_id}", use_container_width=True):
-                        if update_task_status_local(task_id, "missed"):
-                            st.rerun()
-                if status != "pending":
-                    if st.button("Reset Pending", key=f"pend_{task_id}", use_container_width=True):
-                        if update_task_status_local(task_id, "pending"):
-                            st.rerun()
+            # Expander acts as the expand arrow, containing additional actions
+            with st.expander(f"📖 {topic_desc}   •   ⏱️ {duration}"):
+                st.markdown(
+                    f"""
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
+                        <span class="badge badge-{status}">{status.upper()}</span>
+                        <span class="badge" style="background-color: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25);">{subject}</span>
+                        <span class="badge badge-{difficulty.lower()}">{difficulty.upper()} DIFFICULTY</span>
+                        <span class="badge" style="background-color: rgba(255, 255, 255, 0.05); color: #8b949e; border: 1px solid rgba(255, 255, 255, 0.1);">⏱️ {duration}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                col_info, col_actions = st.columns([3, 2])
+                with col_info:
+                    st.markdown(f"**Task ID**: `{task_id}`")
+                    st.markdown(f"**Topic Details**: {topic_desc}")
+                    # Fetch subject-specific curated resources dynamically
+                    from app.mcp_server import retrieve_resources
+                    res_str = retrieve_resources(subject, topic_desc)
+                    st.markdown("---")
+                    st.markdown(res_str)
+                with col_actions:
+                    st.markdown("**Update Status**")
+                    if status != "completed":
+                        if st.button("Mark Completed", key=f"comp_{task_id}", use_container_width=True):
+                            if update_task_status_local(task_id, "completed"):
+                                st.rerun()
+                    if status != "missed":
+                        if st.button("Mark Missed", key=f"miss_{task_id}", use_container_width=True):
+                            if update_task_status_local(task_id, "missed"):
+                                st.rerun()
+                    if status != "pending":
+                        if st.button("Reset Pending", key=f"pend_{task_id}", use_container_width=True):
+                            if update_task_status_local(task_id, "pending"):
+                                st.rerun()
                             
     if len(tasks) > 5:
         if st.session_state.show_all_tasks:
@@ -769,18 +769,21 @@ def render_right_sidebar_widgets():
     )
     
     # 3. Recommended Resources Widget
-    st.markdown(
-        """
-        <div class="metric-card" style="margin-bottom: 14px;">
-            <div class="card-title">📚 Recommended Links</div>
-            <div style="font-size: 0.85rem; line-height: 1.45; color: #cbd5e1; display: flex; flex-direction: column; gap: 8px;">
-                <div>🎥 <a href="https://www.youtube.com/watch?v=LANw15a7la4" target="_blank" style="color: #ec4899; text-decoration: none; font-weight: 600;">OSI Layer Explanation</a></div>
-                <div>📄 <a href="https://www.geeksforgeeks.org/layers-of-osi-model/" target="_blank" style="color: #a855f7; text-decoration: none; font-weight: 600;">GeeksforGeeks OSI Guide</a></div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("<div class='metric-card' style='margin-bottom: 14px;'><div class='card-title'>📚 Recommended Links</div>", unsafe_allow_html=True)
+    if tasks:
+        # Get the first pending task
+        pending = [t for t in tasks if t.get("status") == "pending"]
+        if pending:
+            top_task = pending[0]
+            from app.mcp_server import retrieve_resources
+            res_str = retrieve_resources(top_task.get("subject", ""), top_task.get("topic", ""))
+            st.markdown(f"<div style='font-size: 0.82rem; color: #cbd5e1; margin-bottom: 6px;'>Next up: **{top_task.get('topic')}** ({top_task.get('subject')})</div>", unsafe_allow_html=True)
+            st.markdown(res_str)
+        else:
+            st.markdown("<div style='font-size: 0.82rem; color: #8b949e;'>All topics completed! No pending links.</div>", unsafe_allow_html=True)
+    else:
+        st.markdown("<div style='font-size: 0.82rem; color: #8b949e;'>No recommended links available yet. Complete onboarding first.</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
     
     # 4. Motivational Quote
     st.markdown(
@@ -833,16 +836,21 @@ def render_roadmap_page():
         
     grouped_filtered = defaultdict(list)
     for t in filtered_tasks:
-        grouped_filtered[t.get("subject", "General")].append(t)
+        day_val = t.get("day") or "Day 1"
+        grouped_filtered[day_val].append(t)
         
-    for subject, sub_tasks in grouped_filtered.items():
-        st.markdown(f"<div class='subject-header'>📖 {subject}</div>", unsafe_allow_html=True)
-        for t in sub_tasks:
+    # Sort days
+    sorted_days = sorted(grouped_filtered.keys(), key=lambda x: int(re.search(r'\d+', x).group()) if re.search(r'\d+', x) else 999)
+        
+    for day in sorted_days:
+        st.markdown(f"<div class='subject-header'>📅 {day.upper()}</div>", unsafe_allow_html=True)
+        for t in grouped_filtered[day]:
             status = t.get("status", "pending")
             badge_class = f"badge-{status}"
             topic_desc = t.get("topic", "N/A")
             duration = t.get("estimated_time", "N/A")
             task_id = t.get("id", "N/A")
+            subject = t.get("subject", "General")
             
             # Determine difficulty dynamically
             difficulty = "Medium"
@@ -867,6 +875,11 @@ def render_roadmap_page():
                 with col_info:
                     st.markdown(f"**Task ID**: `{task_id}`")
                     st.markdown(f"**Topic Details**: {topic_desc}")
+                    # Fetch subject-specific curated resources dynamically
+                    from app.mcp_server import retrieve_resources
+                    res_str = retrieve_resources(subject, topic_desc)
+                    st.markdown("---")
+                    st.markdown(res_str)
                 with col_actions:
                     st.markdown("**Update Status**")
                     if status != "completed":
@@ -886,7 +899,7 @@ def render_progress_page():
     st.markdown("### 📊 Progress Analytics")
     
     if not profile_completed or not tasks:
-        st.info("Onboarding setup incomplete. Please use the Chat tab first.")
+        st.info("No study progress available yet.")
         return
         
     completed = sum(1 for t in tasks if t.get("status") == "completed")
@@ -894,6 +907,10 @@ def render_progress_page():
     pending = sum(1 for t in tasks if t.get("status") == "pending")
     total = len(tasks)
     
+    if completed == 0:
+        st.info("No study progress available yet.")
+        return
+        
     col_ring, col_stats_grid = st.columns([1, 2])
     with col_ring:
         percentage = (completed / total * 100) if total > 0 else 0
@@ -940,68 +957,55 @@ def render_progress_page():
             unsafe_allow_html=True
         )
         
-    st.markdown("#### 📅 Study Consistency History")
-    history_df = pd.DataFrame({
-        "Day": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        "Completed Sessions": [1, 2, 0, 1, 2, completed, completed + 1]
-    }).set_index("Day")
-    st.area_chart(history_df)
+    # Count completed tasks per subject dynamically
+    subjects_completed = {}
+    for t in tasks:
+        subj = t.get("subject", "General").capitalize()
+        if t.get("status") == "completed":
+            subjects_completed[subj] = subjects_completed.get(subj, 0) + 1
+            
+    if subjects_completed:
+        st.markdown("#### 📊 Completed Topics by Subject")
+        chart_data = pd.DataFrame({
+            "Subject": list(subjects_completed.keys()),
+            "Completed Topics": list(subjects_completed.values())
+        }).set_index("Subject")
+        st.bar_chart(chart_data)
 
 def render_resources_page():
-    st.markdown("### 📚 All Resources")
+    st.markdown("### 📚 All Study Resources")
     
-    if not profile_completed:
-        st.info("Onboarding setup incomplete. Please use the Chat tab first.")
+    if not profile_completed or not tasks:
+        st.info("No study progress or roadmap generated yet. Complete onboarding first.")
         return
         
-    col_search, col_type = st.columns([2, 1])
+    col_search, _ = st.columns([2, 1])
     with col_search:
-        search_query = st.text_input("🔍 Search Resources", "")
-    with col_type:
-        resource_type = st.radio("Format", ["All", "Videos", "Articles", "Books"], horizontal=True)
+        search_query = st.text_input("🔍 Search Topics", "")
         
-    subjects_enrolled = profile.get("subjects", ["Biology", "Computer Networks"])
-    
+    from app.mcp_server import retrieve_resources
     found_any = False
-    for subject in subjects_enrolled:
-        subj_resources = DEFAULT_RESOURCES.get(subject, DEFAULT_RESOURCES.get("Biology", []))
+    
+    # Group tasks by subject
+    grouped_tasks = defaultdict(list)
+    for t in tasks:
+        subj = t.get("subject", "General").lower().strip()
+        grouped_tasks[subj].append(t)
         
-        filtered = []
-        for r in subj_resources:
-            if search_query.lower() not in r["title"].lower():
-                continue
-            if resource_type != "All" and r["type"] != resource_type:
-                continue
-            filtered.append(r)
+    for subject, sub_tasks in grouped_tasks.items():
+        matching_tasks = [t for t in sub_tasks if search_query.lower() in t.get("topic", "").lower()]
+        if not matching_tasks:
+            continue
             
-        if filtered:
-            st.markdown(f"#### 📖 {subject} Materials")
-            found_any = True
-            
-            cols = st.columns(3)
-            for idx, r in enumerate(filtered):
-                col = cols[idx % 3]
-                icon = "🎥" if r["type"] == "Videos" else "📄" if r["type"] == "Articles" else "📚"
-                with col:
-                    st.markdown(
-                        f"""
-                        <div class="metric-card" style="margin-bottom: 12px; height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <div style="font-size: 1.3rem; margin-bottom: 6px;">{icon}</div>
-                                <div class="card-title" style="margin-bottom: 4px; font-size: 0.72rem;">{r['source']}</div>
-                                <div class="card-value" style="font-size: 0.90rem; line-height: 1.3;">{r['title']}</div>
-                                <div style="font-size: 0.78rem; color: #8b949e; margin-top: 4px;">⏱️ {r['duration']}</div>
-                            </div>
-                            <a href="{r['link']}" target="_blank" style="text-decoration: none;">
-                                <div style="background: {active_theme_colors['gradient']}; color: white; text-align: center; padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; margin-top: 8px;">
-                                    Open Link
-                                </div>
-                            </a>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                    
+        st.markdown(f"<div class='subject-header'>📖 {subject.upper()} Materials</div>", unsafe_allow_html=True)
+        found_any = True
+        
+        for t in matching_tasks:
+            topic_name = t.get("topic", "")
+            res_str = retrieve_resources(subject, topic_name)
+            with st.expander(f"✨ {topic_name}"):
+                st.markdown(res_str)
+                
     if not found_any:
         st.markdown("*No matching resources found.*")
 
@@ -1127,31 +1131,41 @@ with st.sidebar:
         st.session_state.active_page = "Settings"
         st.rerun()
         
-    if st.button("🔄 New Study Session", key="nav_new_session", use_container_width=True):
+    st.markdown("---")
+    st.markdown("<div class='sidebar-label' style='font-weight: 600; font-size: 11px; margin-top: 10px; margin-bottom: 5px; color: #8b949e;'>STUDY PLAN MODES</div>", unsafe_allow_html=True)
+    
+    if st.button("▶️ Continue Previous Plan", key="btn_continue_plan", use_container_width=True):
+        st.toast("Resuming previous study plan!", icon="📚")
+        st.session_state.active_page = "Dashboard"
+        st.rerun()
+        
+    if st.button("🔄 Start New Study Plan", key="btn_new_plan", use_container_width=True):
         st.session_state.messages = []
         st.session_state.last_query = None
         st.session_state.pending_interrupt = None
         
         # Reset local data file values so onboarding begins fresh
-        db_data = load_local_data()
-        if db_data and isinstance(db_data, dict):
-            if "profile" in db_data:
-                db_data["profile"]["onboarding_completed"] = False
-                db_data["profile"]["subjects"] = []
-                db_data["profile"]["exam_dates"] = {}
-                db_data["profile"]["study_availability"] = ""
-                db_data["profile"]["session_length"] = ""
-                db_data["profile"]["strengths_weaknesses"] = ""
-            if "roadmap" in db_data:
-                db_data["roadmap"]["tasks"] = []
-            save_local_data(db_data)
-            
-        async def reset_session():
-            session = await st.session_state.runner.session_service.create_session(
-                app_name="app", user_id="student_user"
-            )
-            return session.id
-        st.session_state.session_id = asyncio.run(reset_session())
+        db_data = {
+            "profile": {
+                "subjects": [],
+                "exam_dates": {},
+                "study_availability": "",
+                "session_length": "",
+                "strengths_weaknesses": "",
+                "onboarding_completed": False
+            },
+            "roadmap": {
+                "tasks": []
+            }
+        }
+        save_local_data(db_data)
+        
+        # Reset session ID to a fresh unique session ID
+        import uuid
+        st.session_state.session_id = str(uuid.uuid4())
+        
+        st.toast("Previous plan discarded. Welcome to PathWise onboarding!", icon="🚀")
+        st.session_state.active_page = "Dashboard"
         st.rerun()
         
     st.markdown("---")

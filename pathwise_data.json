@@ -1,131 +1,13 @@
 {
   "profile": {
-    "subjects": [
-      "biology",
-      "chemistry"
-    ],
-    "exam_dates": {
-      "exams": "biology on july 16 chemistry july 20"
-    },
-    "study_availability": "2 hours daily",
-    "session_length": "45 minutes",
-    "strengths_weaknesses": "weak in genetics and strong in botany ",
-    "onboarding_completed": true
+    "subjects": [],
+    "exam_dates": {},
+    "study_availability": "",
+    "session_length": "",
+    "strengths_weaknesses": "",
+    "onboarding_completed": false
   },
   "roadmap": {
-    "tasks": [
-      {
-        "id": "task1",
-        "subject": "biology",
-        "topic": "Genetics: Mendelian Inheritance & Punnett Squares (Concepts)",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task2",
-        "subject": "chemistry",
-        "topic": "Atomic Structure & Electron Configuration",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task3",
-        "subject": "biology",
-        "topic": "Genetics: Solving Mendelian Inheritance Problems",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task4",
-        "subject": "biology",
-        "topic": "Cell Biology: Structure and Function of Eukaryotic Cells",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task5",
-        "subject": "chemistry",
-        "topic": "Chemical Bonding: Ionic & Covalent Bonds",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task6",
-        "subject": "biology",
-        "topic": "Genetics: DNA Structure & Replication",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task7",
-        "subject": "biology",
-        "topic": "Genetics: Transcription & Translation (Protein Synthesis)",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task8",
-        "subject": "chemistry",
-        "topic": "Stoichiometry: Balancing Chemical Equations & Mole Concept",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task9",
-        "subject": "biology",
-        "topic": "Human Physiology: Nervous System Basics",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task10",
-        "subject": "chemistry",
-        "topic": "Acids, Bases, & pH Scale",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task11",
-        "subject": "biology",
-        "topic": "Genetics: Non-Mendelian Inheritance Patterns",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task12",
-        "subject": "biology",
-        "topic": "Ecology: Ecosystems & Energy Flow",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task13",
-        "subject": "chemistry",
-        "topic": "Organic Chemistry: Introduction to Hydrocarbons (Alkanes, Alkenes)",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task14",
-        "subject": "biology",
-        "topic": "Botany: Photosynthesis & Plant Nutrition (Quick Review)",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task15",
-        "subject": "biology",
-        "topic": "Genetics: Genetic Engineering & Biotechnology Basics",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      },
-      {
-        "id": "task16",
-        "subject": "chemistry",
-        "topic": "Chemical Kinetics: Reaction Rates & Factors Affecting Them",
-        "estimated_time": "45 minutes",
-        "status": "pending"
-      }
-    ]
+    "tasks": []
   }
 }
